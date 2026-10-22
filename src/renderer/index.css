@@ -25,16 +25,33 @@
   --color-tier-d: #6b7280;
 }
 
+/* Desktop app, not a page: the window itself never scrolls. Exactly one
+   region inside the shell does (see App.tsx). */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   background-color: var(--color-ow-dark);
   color: var(--color-ow-text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  min-height: 100vh;
+  /* Desktop density: the web version's default was a touch large here. */
+  font-size: 14px;
 }
 
-#root {
-  min-height: 100vh;
+/* Nothing in the app is text-selectable by default except actual content —
+   dragging across a dashboard and highlighting everything feels like a web
+   page. Content areas opt back in. */
+button,
+a,
+nav,
+header,
+footer {
+  user-select: none;
 }
 
 ::-webkit-scrollbar {

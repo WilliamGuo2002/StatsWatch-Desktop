@@ -162,5 +162,22 @@
   "Data provided by OverFast API": "OverFast API 데이터 제공",
   "Made with love for the Overwatch community": "오버워치 커뮤니티를 위해 제작",
   "Player 1 BattleTag (Name#1234)": "플레이어1 배틀태그 (Name#1234)",
-  "Player 2 BattleTag (Name#1234)": "플레이어2 배틀태그 (Name#1234)"
+  "Player 2 BattleTag (Name#1234)": "플레이어2 배틀태그 (Name#1234)",
+  "About": "정보",
+  "Players": "플레이어",
+  "Heroes": "영웅",
+  "Explore": "둘러보기",
+  "Matches": "경기",
+  "Match History": "경기 기록",
+  "Soon": "곧",
+  "Language": "언어",
+  "Collapse": "접기",
+  "Expand": "펼치기",
+  "Overwatch not running": "오버워치 실행 중 아님",
+  "Overwatch running": "오버워치 실행 중",
+  "Recording this match": "이 경기를 기록 중",
+  "Stats unlock when the match ends": "경기가 끝나면 통계가 열립니다",
+  "{{count}} recorded this session": "이번 세션에 {{count}}경기 기록됨",
+  "Career data: OverFast API": "커리어 데이터: OverFast API",
+  "Unofficial — not affiliated with Blizzard": "비공식 — Blizzard와 무관합니다"
 }

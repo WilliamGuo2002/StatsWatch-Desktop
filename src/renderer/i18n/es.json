@@ -162,5 +162,22 @@
   "Data provided by OverFast API": "Datos proporcionados por OverFast API",
   "Made with love for the Overwatch community": "Hecho con amor para la comunidad de Overwatch",
   "Player 1 BattleTag (Name#1234)": "Jugador 1 BattleTag (Name#1234)",
-  "Player 2 BattleTag (Name#1234)": "Jugador 2 BattleTag (Name#1234)"
+  "Player 2 BattleTag (Name#1234)": "Jugador 2 BattleTag (Name#1234)",
+  "About": "Acerca de",
+  "Players": "Jugadores",
+  "Heroes": "Héroes",
+  "Explore": "Explorar",
+  "Matches": "Partidas",
+  "Match History": "Historial de partidas",
+  "Soon": "Pronto",
+  "Language": "Idioma",
+  "Collapse": "Contraer",
+  "Expand": "Expandir",
+  "Overwatch not running": "Overwatch no está en ejecución",
+  "Overwatch running": "Overwatch en ejecución",
+  "Recording this match": "Grabando esta partida",
+  "Stats unlock when the match ends": "Las estadísticas se desbloquean al terminar",
+  "{{count}} recorded this session": "{{count}} grabadas en esta sesión",
+  "Career data: OverFast API": "Datos de carrera: OverFast API",
+  "Unofficial — not affiliated with Blizzard": "No oficial — sin relación con Blizzard"
 }

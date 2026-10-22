@@ -162,5 +162,22 @@
   "Data provided by OverFast API": "数据由 OverFast API 提供",
   "Made with love for the Overwatch community": "为守望先锋社区用心打造",
   "Player 1 BattleTag (Name#1234)": "玩家1 战网ID (Name#1234)",
-  "Player 2 BattleTag (Name#1234)": "玩家2 战网ID (Name#1234)"
+  "Player 2 BattleTag (Name#1234)": "玩家2 战网ID (Name#1234)",
+  "About": "关于",
+  "Players": "玩家",
+  "Heroes": "英雄",
+  "Explore": "图鉴",
+  "Matches": "对局",
+  "Match History": "对局记录",
+  "Soon": "即将",
+  "Language": "语言",
+  "Collapse": "收起",
+  "Expand": "展开",
+  "Overwatch not running": "守望先锋未运行",
+  "Overwatch running": "守望先锋运行中",
+  "Recording this match": "正在记录本局",
+  "Stats unlock when the match ends": "本局结束后解锁数据",
+  "{{count}} recorded this session": "本次已记录 {{count}} 局",
+  "Career data: OverFast API": "生涯数据来自 OverFast API",
+  "Unofficial — not affiliated with Blizzard": "非官方 · 与暴雪无关联"
 }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, Menu, shell } from 'electron';
 import path from 'node:path';
 import { IPC } from '../shared/ipc';
 import { overfast } from './overfast/client';
@@ -29,12 +29,20 @@ function registerOverfastIpc(): void {
 
 function createWindow(): void {
   const win = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 960,
-    minHeight: 640,
-    backgroundColor: '#0b0d12',
+    width: 1360,
+    height: 880,
+    minWidth: 1024,
+    minHeight: 680,
+    backgroundColor: '#0a0e1a',
     show: false,
+    // Desktop chrome, not a browser frame: we draw the title bar ourselves
+    // and let Windows render its native min/max/close over our colour.
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: '#060a14',
+      symbolColor: '#9ca3af',
+      height: 38,
+    },
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -60,6 +68,9 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  // No File/Edit/View/Window menu — this is an app, not a browser.
+  Menu.setApplicationMenu(null);
+
   registerOverfastIpc();
   registerCaptureIpc();
   createWindow();

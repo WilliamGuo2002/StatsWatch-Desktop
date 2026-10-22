@@ -14,6 +14,22 @@ function writeStorage<T>(key: string, value: T): void {
   localStorage.setItem(key, JSON.stringify(value));
 }
 
+// ---- Generic persisted UI preference ----
+/** For small per-viewer UI prefs (sidebar collapsed, last tab). */
+export function usePersistedState<T>(key: string, fallback: T) {
+  const [value, setValue] = useState<T>(() => readStorage(key, fallback));
+
+  const set = useCallback(
+    (next: T) => {
+      setValue(next);
+      writeStorage(key, next);
+    },
+    [key]
+  );
+
+  return [value, set] as const;
+}
+
 // ---- Favorites ----
 export function useFavorites() {
   const [favorites, setFavorites] = useState<FavoritePlayer[]>(() =>

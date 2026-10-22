@@ -162,5 +162,22 @@
   "Data provided by OverFast API": "Data provided by OverFast API",
   "Made with love for the Overwatch community": "Made with love for the Overwatch community",
   "Player 1 BattleTag (Name#1234)": "Player 1 BattleTag (Name#1234)",
-  "Player 2 BattleTag (Name#1234)": "Player 2 BattleTag (Name#1234)"
+  "Player 2 BattleTag (Name#1234)": "Player 2 BattleTag (Name#1234)",
+  "About": "About",
+  "Players": "Players",
+  "Heroes": "Heroes",
+  "Explore": "Explore",
+  "Matches": "Matches",
+  "Match History": "Match History",
+  "Soon": "Soon",
+  "Language": "Language",
+  "Collapse": "Collapse",
+  "Expand": "Expand",
+  "Overwatch not running": "Overwatch not running",
+  "Overwatch running": "Overwatch running",
+  "Recording this match": "Recording this match",
+  "Stats unlock when the match ends": "Stats unlock when the match ends",
+  "{{count}} recorded this session": "{{count}} recorded this session",
+  "Career data: OverFast API": "Career data: OverFast API",
+  "Unofficial — not affiliated with Blizzard": "Unofficial — not affiliated with Blizzard"
 }

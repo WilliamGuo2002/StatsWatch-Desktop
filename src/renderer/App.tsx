@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
+import TitleBar from './components/layout/TitleBar';
+import Sidebar from './components/layout/Sidebar';
+import StatusBar from './components/layout/StatusBar';
 import SearchPage from './components/search/SearchPage';
 import PlayerProfilePage from './components/profile/PlayerProfilePage';
 import CareerStatsPage from './components/career/CareerStatsPage';
@@ -15,29 +16,44 @@ import MapGalleryPage from './components/explore/MapGalleryPage';
 import GamemodesPage from './components/explore/GamemodesPage';
 import AboutPage from './components/about/AboutPage';
 
+/**
+ * Desktop shell: a fixed title bar, a persistent sidebar, a status strip,
+ * and exactly one scrolling region in the middle.
+ *
+ * The window never scrolls as a whole — that is the difference between an
+ * app and a page in a frame.
+ */
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 max-w-6xl mx-auto w-full px-4 pb-8">
-        <Routes>
-          <Route path="/" element={<SearchPage />} />
-          <Route path="/player/:playerId" element={<PlayerProfilePage />} />
-          <Route path="/player/:playerId/career/:heroKey?" element={<CareerStatsPage />} />
-          <Route path="/player/:playerId/hero/:heroKey" element={<HeroDetailPage />} />
-          <Route path="/player/:playerId/hero-comparison" element={<HeroComparisonPage />} />
-          <Route path="/player/:playerId/progress" element={<ProgressTrackingPage />} />
-          <Route path="/player/:playerId/session" element={<SessionTrackerPage />} />
-          <Route path="/compare" element={<PlayerComparisonPage />} />
-          <Route path="/heroes" element={<HeroEncyclopediaPage />} />
-          <Route path="/heroes/:heroKey" element={<HeroEncyclopediaPage />} />
-          <Route path="/meta" element={<HeroMetaPage />} />
-          <Route path="/maps" element={<MapGalleryPage />} />
-          <Route path="/gamemodes" element={<GamemodesPage />} />
-          <Route path="/about" element={<AboutPage />} />
-        </Routes>
-      </main>
-      <Footer />
+    <div className="flex h-screen flex-col overflow-hidden bg-ow-dark">
+      <TitleBar />
+
+      <div className="flex min-h-0 flex-1">
+        <Sidebar />
+
+        <main className="min-w-0 flex-1 overflow-y-auto">
+          <div className="px-6 py-5">
+            <Routes>
+              <Route path="/" element={<SearchPage />} />
+              <Route path="/player/:playerId" element={<PlayerProfilePage />} />
+              <Route path="/player/:playerId/career/:heroKey?" element={<CareerStatsPage />} />
+              <Route path="/player/:playerId/hero/:heroKey" element={<HeroDetailPage />} />
+              <Route path="/player/:playerId/hero-comparison" element={<HeroComparisonPage />} />
+              <Route path="/player/:playerId/progress" element={<ProgressTrackingPage />} />
+              <Route path="/player/:playerId/session" element={<SessionTrackerPage />} />
+              <Route path="/compare" element={<PlayerComparisonPage />} />
+              <Route path="/heroes" element={<HeroEncyclopediaPage />} />
+              <Route path="/heroes/:heroKey" element={<HeroEncyclopediaPage />} />
+              <Route path="/meta" element={<HeroMetaPage />} />
+              <Route path="/maps" element={<MapGalleryPage />} />
+              <Route path="/gamemodes" element={<GamemodesPage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
+
+      <StatusBar />
     </div>
   );
 }

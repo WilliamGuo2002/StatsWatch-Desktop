@@ -162,5 +162,22 @@
   "Data provided by OverFast API": "データ提供: OverFast API",
   "Made with love for the Overwatch community": "オーバーウォッチコミュニティのために制作",
   "Player 1 BattleTag (Name#1234)": "プレイヤー1 バトルタグ (Name#1234)",
-  "Player 2 BattleTag (Name#1234)": "プレイヤー2 バトルタグ (Name#1234)"
+  "Player 2 BattleTag (Name#1234)": "プレイヤー2 バトルタグ (Name#1234)",
+  "About": "このアプリについて",
+  "Players": "プレイヤー",
+  "Heroes": "ヒーロー",
+  "Explore": "図鑑",
+  "Matches": "マッチ",
+  "Match History": "マッチ履歴",
+  "Soon": "近日",
+  "Language": "言語",
+  "Collapse": "折りたたむ",
+  "Expand": "展開",
+  "Overwatch not running": "オーバーウォッチ未起動",
+  "Overwatch running": "オーバーウォッチ起動中",
+  "Recording this match": "このマッチを記録中",
+  "Stats unlock when the match ends": "マッチ終了後に統計が表示されます",
+  "{{count}} recorded this session": "このセッションで {{count}} 件記録",
+  "Career data: OverFast API": "キャリアデータ: OverFast API",
+  "Unofficial — not affiliated with Blizzard": "非公式 — Blizzard とは無関係です"
 }
