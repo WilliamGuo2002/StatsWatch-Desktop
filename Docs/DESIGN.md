@@ -530,7 +530,7 @@ user_hero_season(user_id, season, hero_id, games, wins,
 |---|---|---|
 | 运行时 | **ow-electron**（Overwolf 的 Electron 发行版） | 唯一能同时拿到 GEP + overlay + recorder 又能自行分发的方案 |
 | 语言 | TypeScript | 与 Swift 的模型层对应关系清晰，便于移植 |
-| UI | React + Vite | 生态成熟；StatsWatch 的组件概念可一一对应 |
+| UI | React + Vite | **直接复用 [StatsWatch 网页版](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)**（已是 TS + React，含 `api/overwatchApi.ts`、career/compare/heroes/profile/progress/search 组件、5 语言 i18n、`types/models.ts`） |
 | 图表 | Recharts / visx | 对应 iOS 的 Swift Charts |
 | 本地库 | better-sqlite3 | 同步 API，主进程里最简单最快 |
 | 状态 | Zustand | 轻 |
@@ -575,6 +575,11 @@ ow-electron 跑起来、GEP 连上 Overwatch（10844）、把**所有** feature 
 
 ### M2 — 生涯查询（移植 StatsWatch）
 OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地图图鉴；对比；风格画像；Smart Coach；分享卡片。
+
+> **不要从 Swift 重写。** 已有的 [StatsWatch 网页版](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker) 就是 TypeScript + React，`src/api/overwatchApi.ts`（OverFast 客户端）、`src/types/models.ts`（数据模型）、`src/components/{career,compare,heroes,profile,progress,search}`、`src/i18n/*.json`（5 语言）可以直接搬进 `src/renderer/`。
+>
+> 这一步的实际工作变成：搬运 → 改成 Electron 渲染进程（IPC 取代直接 fetch 的部分）→ 接本地 SQLite → 补 iOS 版有而网页版没有的（Smart Coach、风格画像、英雄分级、分享卡片，这几个从 Swift 翻）。
+>
 > 这一半不依赖 Overwolf，可以**独立先发布**，没有封号风险、不开游戏也能用。
 
 ### M3 — 派生分析（= OverBuddy 的付费区）
@@ -625,6 +630,6 @@ OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地�
 - [ow-electron FAQ（分发与平台支持）](https://dev.overwolf.com/ow-electron/getting-started/onboarding-resources/ow-electron-faq)
 - [Overwolf 官方 Overwatch 事件示例应用](https://github.com/overwolf/events-sample-apps/tree/master/overwatch-events-sample-app)
 - [OverFast API](https://overfast-api.tekrop.fr)
-- [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker)
+- [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker) ｜ [StatsWatch 网页版（TS + React，M2 的复用来源）](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)
 - [OverBuddy](https://overbuddy.com/) ｜ [FAQ](https://overbuddy.com/faq/) ｜ [Premium](https://overbuddy.com/premium/)
 - [Cloudflare Workers 定价](https://developers.cloudflare.com/workers/platform/pricing/)
