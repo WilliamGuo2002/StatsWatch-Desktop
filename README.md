@@ -46,13 +46,13 @@ StatsWatch Desktop 是**本地优先**的：原始对局数据、时间序列、
 
 ## 状态
 
-🚧 设计阶段。完整技术设计见 **[Docs/DESIGN.md](Docs/DESIGN.md)**，GEP 字段与 ID 对照表见 **[Docs/GEP-REFERENCE.md](Docs/GEP-REFERENCE.md)**。
+🚧 开发中（M2）。完整技术设计见 **[Docs/DESIGN.md](Docs/DESIGN.md)**，GEP 字段与 ID 对照表见 **[Docs/GEP-REFERENCE.md](Docs/GEP-REFERENCE.md)**。
 
 | 里程碑 | 内容 | 状态 |
 |---|---|---|
 | M0 | GEP 接通 + 事件流 dump | ⬜ |
 | M1 | 采集落库 + 比赛历史 + 记分板 | ⬜ |
-| M2 | 生涯查询（移植 StatsWatch） | ⬜ |
+| M2 | 生涯查询（移植 StatsWatch） | 🟡 工程骨架已通，待验证 |
 | M3 | 派生分析（团战/对位/宿敌/教练） | ⬜ |
 | M4 | 自动剪辑（无游戏内 overlay） | ⬜ |
 | M5 | 云端可选功能（好友/排行榜/基准） | ⬜ |
