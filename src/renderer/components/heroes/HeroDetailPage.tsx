@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { getPlayerStatsSummary, getHeroes } from '../../api/overwatchApi';
 import { formatPercent, formatStat, formatTimePlayed, formatNumber } from '../../utils/formatting';
-import { getHeroRole, ROLE_COLORS, RADAR_MAX } from '../../utils/constants';
+import { getHeroRole, ROLE_COLORS, HERO_RADAR_MAX } from '../../utils/constants';
 import { RADAR_LABELS } from '../../utils/statsCalculations';
 import type { HeroStatEntry, HeroInfo } from '../../types/models';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -145,9 +145,9 @@ export default function HeroDetailPage() {
     );
   }
 
-  // Radar data for single hero
-  const roleKey = role || 'all';
-  const max = RADAR_MAX[roleKey] || RADAR_MAX.all;
+  // Radar data for single hero. Fixed scale, not the role tables — see
+  // HERO_RADAR_MAX.
+  const max = HERO_RADAR_MAX;
   const radarValues = [
     Math.min(heroStats.average.eliminations / max[0], 1),
     Math.min(heroStats.average.assists / max[1], 1),

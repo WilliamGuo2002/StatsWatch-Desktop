@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { getPlayerStatsSummary, getHeroes } from '../../api/overwatchApi';
 import { formatStat, formatNumber } from '../../utils/formatting';
-import { RADAR_MAX } from '../../utils/constants';
-import { getHeroRole } from '../../utils/constants';
+import { HERO_RADAR_MAX } from '../../utils/constants';
 import { RADAR_LABELS } from '../../utils/statsCalculations';
 import type { HeroStatEntry } from '../../types/models';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -160,9 +159,10 @@ export default function HeroComparisonPage() {
   const statsB: HeroStatEntry | undefined = heroB ? stats?.heroes?.[heroB] : undefined;
   const canCompare = statsA && statsB;
 
-  const getRadarValues = (heroStats: HeroStatEntry, key: string): number[] => {
-    const role = getHeroRole(key);
-    const max = RADAR_MAX[role] || RADAR_MAX.all;
+  // Both heroes share one scale. Scaling each by its own role put them on
+  // different axes in the same picture — see HERO_RADAR_MAX.
+  const getRadarValues = (heroStats: HeroStatEntry): number[] => {
+    const max = HERO_RADAR_MAX;
     return [
       Math.min(heroStats.average.eliminations / max[0], 1),
       Math.min(heroStats.average.assists / max[1], 1),
@@ -228,8 +228,8 @@ export default function HeroComparisonPage() {
           <div className="bg-ow-card border border-ow-border rounded-lg p-4">
             <h2 className="text-lg font-semibold text-ow-text mb-4">{t('Performance Comparison')}</h2>
             <DualRadarChart
-              valuesA={getRadarValues(statsA, heroA)}
-              valuesB={getRadarValues(statsB, heroB)}
+              valuesA={getRadarValues(statsA)}
+              valuesB={getRadarValues(statsB)}
               labels={RADAR_LABELS}
               labelA={getHeroName(heroA)}
               labelB={getHeroName(heroB)}

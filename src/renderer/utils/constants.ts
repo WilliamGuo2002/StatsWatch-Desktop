@@ -85,6 +85,16 @@ export const RADAR_MEDIANS: Record<string, number[]> = {
 
 // Radar chart max values for normalization per role — aligned with iOS
 // Order: [elims, assists, deaths, damage, healing]
+// Hero radars use ONE fixed scale, not the per-role tables below.
+//
+// Scaling each hero by its own role makes two heroes on the same chart
+// incomparable: Ana at 3500 damage/10 against the support ceiling of 6000
+// plots at 0.58, while Soldier:76 at 7000 against the damage ceiling of
+// 14000 plots at 0.50 — so the chart draws twice the damage as less.
+// Matches iOS: elims/25, assists/15, 1-deaths/15, damage/12000, healing/8000.
+// Order: [elims, assists, deaths, damage, healing]
+export const HERO_RADAR_MAX: number[] = [25, 15, 15, 12000, 8000];
+
 export const RADAR_MAX: Record<string, number[]> = {
   all:     [28.0, 15.0, 15.0, 12000, 8000],
   tank:    [28.0, 10.0, 15.0, 14000, 3000],
