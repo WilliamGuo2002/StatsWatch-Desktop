@@ -173,19 +173,22 @@ export default function PlayerProfilePage() {
   }
 
   // --- Nav links ---
+  // iOS gives each of these an icon and a colour. It also routes Hero
+  // Comparison to hero-comparison: `/compare` matched no route at all, so
+  // this button navigated to a blank screen.
   const navLinks = [
-    { to: `/player/${playerId}/compare`, label: t('Hero Comparison') },
-    { to: `/player/${playerId}/career`, label: t('Full Career Stats') },
-    { to: '/meta', label: t('Hero Meta') },
-    { to: `/player/${playerId}/session`, label: t('Session Tracker') },
-    { to: `/player/${playerId}/progress`, label: t('Progress Tracking') },
-    { to: '/heroes', label: t('Hero Encyclopedia') },
+    { to: `/player/${playerId}/hero-comparison`, label: t('Hero Comparison'), color: 'text-ow-blue', d: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4' },
+    { to: `/player/${playerId}/career`, label: t('Full Career Stats'), color: 'text-purple-400', d: 'M4 6h16M4 12h16M4 18h7' },
+    { to: '/meta', label: t('Hero Meta'), color: 'text-ow-orange', d: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6' },
+    { to: `/player/${playerId}/session`, label: t('Session Tracker'), color: 'text-ow-dps', d: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
+    { to: `/player/${playerId}/progress`, label: t('Progress Tracking'), color: 'text-ow-support', d: 'M3 17l6-6 4 4 8-8m0 0h-5m5 0v5' },
+    { to: '/heroes', label: t('Hero Encyclopedia'), color: 'text-cyan-400', d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' },
   ];
 
   return (
-    <div className="max-w-lg mx-auto px-4 pb-8 space-y-5">
+    <div className="mx-auto max-w-[1600px] space-y-4 pb-8">
       {/* Toolbar */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-1">
         <div className="flex-1" />
         <div className="flex items-center gap-2">
           {/* Favorite toggle */}
@@ -220,63 +223,70 @@ export default function PlayerProfilePage() {
         </div>
       </div>
 
-      {/* 1. Player Header */}
+      {/* Identity and ranks run the full width. */}
       <PlayerHeader summary={summary} />
-
-      {/* 2. Competitive Ranks */}
       <CompetitiveRanks ranks={summary.competitive?.pc} />
 
-      {/* 3. Game Mode Toggle */}
-      <GameModeToggle mode={gamemode} onChange={setGamemode} />
+      {/* The two controls that scope everything below them. */}
+      <div className="flex flex-wrap items-center gap-3">
+        <GameModeToggle mode={gamemode} onChange={setGamemode} />
+        <RoleSelector selectedRole={selectedRole} onChange={setSelectedRole} />
+      </div>
 
-      {/* 4. Stats Overview */}
-      <StatsOverview stats={statsData} selectedRole={selectedRole} />
+      {/* Columns on a desktop window, instead of one phone-width column
+          with several hundred pixels of empty margin either side. */}
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <div className="space-y-4">
+          <StatsOverview stats={statsData} selectedRole={selectedRole} />
+          {Object.keys(roles).length > 0 && <RoleStats roles={roles} />}
+        </div>
 
-      {/* 5. Role Stats */}
-      {Object.keys(roles).length > 0 && <RoleStats roles={roles} />}
+        <div className="space-y-4">
+          <RadarChart
+            data={radarData}
+            medianData={radarMedian}
+            labels={RADAR_LABELS}
+            title={t('Performance Radar')}
+            accentColor={
+              selectedRole === 'tank' ? '#3b82f6' :
+              selectedRole === 'damage' ? '#ef4444' :
+              selectedRole === 'support' ? '#22c55e' : '#f97316'
+            }
+          />
+          <PlayStyleCard style={playStyle} heroPortraitUrl={signaturePortrait} />
+        </div>
 
-      {/* 6. Role Selector + Radar Chart */}
-      <RoleSelector selectedRole={selectedRole} onChange={setSelectedRole} />
-      <RadarChart
-        data={radarData}
-        medianData={radarMedian}
-        labels={RADAR_LABELS}
-        title={t('Performance Radar')}
-        accentColor={
-          selectedRole === 'tank' ? '#3b82f6' :
-          selectedRole === 'damage' ? '#ef4444' :
-          selectedRole === 'support' ? '#22c55e' : '#f97316'
-        }
-      />
+        <div className="space-y-4 lg:col-span-2 xl:col-span-1">
+          {allHeroes.length > 0 && (
+            <TopHeroes
+              heroes={topHeroes}
+              allHeroes={allHeroes}
+              heroInfoList={heroInfoList}
+              playerId={playerId!}
+            />
+          )}
+          {/* iOS gates the tier list on at least 3 heroes; below that an
+              S/A/B/C/D split says nothing. */}
+          {allHeroes.length >= 3 && <HeroTierList tiers={tiers} heroInfoList={heroInfoList} />}
+        </div>
+      </div>
 
-      {/* 7. Play Style Card */}
-      <PlayStyleCard style={playStyle} heroPortraitUrl={signaturePortrait} />
-
-      {/* 8. Top Heroes */}
-      {allHeroes.length > 0 && (
-        <TopHeroes
-          heroes={topHeroes}
-          allHeroes={allHeroes}
-          heroInfoList={heroInfoList}
-          playerId={playerId!}
-        />
-      )}
-
-      {/* 9. Hero Tier List */}
-      <HeroTierList tiers={tiers} heroInfoList={heroInfoList} />
-
-      {/* 10. Smart Coach */}
       <SmartCoach stats={statsData} heroes={heroes} selectedRole={selectedRole} />
 
-      {/* 11. Navigation Links */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
         {navLinks.map(link => (
           <Link
             key={link.to}
             to={link.to}
-            className="bg-ow-card border border-ow-border rounded-xl px-4 py-3 text-sm text-ow-text hover:bg-ow-card-hover hover:border-ow-orange/30 transition-colors text-center"
+            className="flex items-center gap-2.5 rounded-xl border border-ow-border bg-ow-card px-3.5 py-3 text-[13px] font-medium text-ow-text transition-colors hover:border-ow-orange/30 hover:bg-ow-card-hover"
           >
-            {link.label}
+            <svg className={`h-4 w-4 shrink-0 ${link.color}`} fill="none" stroke="currentColor" strokeWidth={1.9} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d={link.d} />
+            </svg>
+            <span className="min-w-0 flex-1 truncate">{link.label}</span>
+            <svg className="h-3 w-3 shrink-0 text-ow-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </Link>
         ))}
       </div>

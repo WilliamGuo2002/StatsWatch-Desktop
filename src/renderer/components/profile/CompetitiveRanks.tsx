@@ -35,6 +35,11 @@ function RankCard({
       {rank ? (
         <>
           <img src={rank.rank_icon} alt={rank.division} className="w-10 h-10" />
+          {/* iOS shows the tier pip under the division icon; the field was
+              in the model all along and never rendered. */}
+          {rank.tier_icon && (
+            <img src={rank.tier_icon} alt={`Tier ${rank.tier}`} className="h-4" />
+          )}
           <span className="text-xs text-ow-text font-medium text-center">
             {getRankDisplay(rank.division, rank.tier)}
           </span>

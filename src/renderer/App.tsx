@@ -16,6 +16,7 @@ import MapGalleryPage from './components/explore/MapGalleryPage';
 import GamemodesPage from './components/explore/GamemodesPage';
 import AboutPage from './components/about/AboutPage';
 import FeedbackTipPage from './components/feedback/FeedbackTipPage';
+import NotFound from './components/common/NotFound';
 
 /**
  * Desktop shell: a fixed title bar, a persistent sidebar, a status strip,
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="/gamemodes" element={<GamemodesPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/feedback" element={<FeedbackTipPage />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
         </main>
