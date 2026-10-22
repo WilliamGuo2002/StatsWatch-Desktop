@@ -15,6 +15,7 @@ import SessionTrackerPage from './components/progress/SessionTrackerPage';
 import MapGalleryPage from './components/explore/MapGalleryPage';
 import GamemodesPage from './components/explore/GamemodesPage';
 import AboutPage from './components/about/AboutPage';
+import FeedbackTipPage from './components/feedback/FeedbackTipPage';
 
 /**
  * Desktop shell: a fixed title bar, a persistent sidebar, a status strip,
@@ -48,6 +49,7 @@ export default function App() {
               <Route path="/maps" element={<MapGalleryPage />} />
               <Route path="/gamemodes" element={<GamemodesPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/feedback" element={<FeedbackTipPage />} />
             </Routes>
           </div>
         </main>

@@ -4,6 +4,9 @@ import { useState, type ReactNode } from 'react';
 import { usePersistedState } from '../../hooks/useLocalStorage';
 
 const LANGUAGES = [
+  // iOS offers "follow the system" as the default; without it the app is
+  // pinned to whatever was picked once and never tracks the OS again.
+  { code: '', label: 'System Default', flag: '🌐' },
   { code: 'en', label: 'English', flag: '🇺🇸' },
   { code: 'zh-Hans', label: '简体中文', flag: '🇨🇳' },
   { code: 'ko', label: '한국어', flag: '🇰🇷' },
@@ -20,6 +23,7 @@ const PATHS = {
   modes: 'M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664zM21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   compare: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
   about: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+  feedback: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
   collapse: 'M11 19l-7-7 7-7m8 14l-7-7 7-7',
   globe: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9',
 };
@@ -88,6 +92,7 @@ export default function Sidebar() {
   const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = usePersistedState('sw_sidebar_collapsed', false);
   const [showLang, setShowLang] = useState(false);
+  const [stored, setStored] = useState<string>(() => localStorage.getItem('sw_language') ?? '');
 
   const railButton = [
     'mx-2 flex h-9 w-[calc(100%-1rem)] items-center gap-3 rounded-md text-[13px]',
@@ -144,6 +149,7 @@ export default function Sidebar() {
       </div>
 
       <div className="shrink-0 border-t border-ow-border py-1.5">
+        <NavItem to="/feedback" icon={PATHS.feedback} label={t('Feedback & Tip')} collapsed={collapsed} />
         <NavItem to="/about" icon={PATHS.about} label={t('About')} collapsed={collapsed} />
 
         <div className="relative">
@@ -161,15 +167,22 @@ export default function Sidebar() {
               <div className="fixed inset-0 z-40" onClick={() => setShowLang(false)} />
               <div className="absolute bottom-full left-2 z-50 mb-1 min-w-[160px] rounded-lg border border-ow-border bg-ow-card py-1 shadow-xl">
                 {LANGUAGES.map((lang) => {
-                  const active =
-                    i18n.language === lang.code ||
-                    i18n.language.startsWith(lang.code.split('-')[0]);
+                  const active = lang.code
+                    ? stored === lang.code
+                    : !stored;
                   return (
                     <button
-                      key={lang.code}
+                      key={lang.code || 'system'}
                       onClick={() => {
-                        i18n.changeLanguage(lang.code);
-                        localStorage.setItem('sw_language', lang.code);
+                        if (lang.code) {
+                          localStorage.setItem('sw_language', lang.code);
+                          i18n.changeLanguage(lang.code);
+                        } else {
+                          // Hand control back to the OS locale.
+                          localStorage.removeItem('sw_language');
+                          i18n.changeLanguage(navigator.language);
+                        }
+                        setStored(lang.code);
                         setShowLang(false);
                       }}
                       className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-ow-card-hover ${

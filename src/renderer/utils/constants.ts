@@ -33,6 +33,18 @@ export const RANK_ORDER = [
 
 // Rank estimation benchmarks per role (per-10 values) — aligned with iOS
 export const RANK_BENCHMARKS: Record<string, Record<string, { elims: number; deaths: number; damage: number; healing: number }>> = {
+  // Used when no role is selected. iOS has this table; without it a
+  // no-role estimate silently fell back to the damage benchmarks, i.e.
+  // every player was graded as if they were a DPS.
+  general: {
+    bronze:  { elims: 8,  deaths: 9,   damage: 3500,  healing: 2000 },
+    silver:  { elims: 11, deaths: 8,   damage: 4500,  healing: 3000 },
+    gold:    { elims: 14, deaths: 7,   damage: 6000,  healing: 4000 },
+    platinum:{ elims: 17, deaths: 6.5, damage: 7500,  healing: 5000 },
+    diamond: { elims: 20, deaths: 6,   damage: 9000,  healing: 6000 },
+    master:  { elims: 23, deaths: 5.5, damage: 10500, healing: 7000 },
+    gm:      { elims: 26, deaths: 5,   damage: 12000, healing: 8000 },
+  },
   tank: {
     bronze:  { elims: 10, deaths: 8,   damage: 5000,  healing: 300 },
     silver:  { elims: 13, deaths: 7,   damage: 6500,  healing: 400 },

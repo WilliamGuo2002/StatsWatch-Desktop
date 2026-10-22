@@ -242,12 +242,23 @@ export function classifyPlayStyle(
 }
 
 // ---- Queue Recommendation (aligned with iOS) ----
+export interface QueueRecommendation {
+  role: string;
+  score: number;
+  winrate: number;
+  kda: number;
+  games: number;
+}
+
 export function getQueueRecommendation(
   roles: Record<string, RoleStatEntry>
-): { role: string; score: number }[] {
-  const results: { role: string; score: number }[] = [];
+): QueueRecommendation[] {
+  const results: QueueRecommendation[] = [];
 
-  for (const [role, data] of Object.entries(roles)) {
+  // iOS ranks only tank/damage/support, in that order of consideration.
+  for (const role of ['tank', 'damage', 'support']) {
+    const data = roles[role];
+    if (!data) continue;
     // iOS requires minimum 3 games per role
     if (data.games_played < 3) continue;
     const wr = data.winrate;
@@ -255,7 +266,7 @@ export function getQueueRecommendation(
     const games = data.games_played;
     // iOS formula: wr * 0.6 + min(kda * 10, 30) * 0.25 + min(games, 50) * 0.15
     const score = wr * 0.6 + Math.min(kda * 10, 30) * 0.25 + Math.min(games, 50) * 0.15;
-    results.push({ role, score });
+    results.push({ role, score, winrate: wr, kda, games });
   }
 
   results.sort((a, b) => b.score - a.score);
@@ -265,16 +276,21 @@ export function getQueueRecommendation(
 // ---- Rank Estimation ----
 export function estimateRank(
   stats: PlayerStatsSummary,
-  role: string
-): { rank: string; confidence: number } {
-  const roleData = stats.roles?.[role] || stats.general;
-  if (!roleData) return { rank: 'Unknown', confidence: 0 };
+  role: string | null
+): { rank: string; confidence: number } | null {
+  // iOS: a selected role uses that role's stats and benchmark table;
+  // no selection uses overall stats against the general table.
+  const roleData = role ? stats.roles?.[role] : stats.general;
+  if (!roleData) return null;
 
-  const benchmarks = RANK_BENCHMARKS[role] || RANK_BENCHMARKS.damage;
+  const benchmarks = RANK_BENCHMARKS[role ?? 'general'] ?? RANK_BENCHMARKS.general;
   const elims = roleData.average.eliminations;
   const deaths = roleData.average.deaths;
   const damage = roleData.average.damage;
   const healing = roleData.average.healing;
+
+  // iOS bails out rather than guessing from an empty profile.
+  if (elims <= 0 && damage <= 0) return null;
 
   let bestRank = 'bronze';
   let bestDistance = Infinity;
@@ -330,6 +346,8 @@ export interface HeroPoolAnalysis {
   supportCount: number;
   warnings: string[];
   subroles: Record<string, string[]>;
+  /** Subroles the player has NO hero for — iOS renders these as red gap tags. */
+  missingSubroles: string[];
   oneTrick?: string;
 }
 
@@ -372,20 +390,52 @@ export function analyzeHeroPool(
 
   const warnings: string[] = [];
   if (heroCount <= 2) warnings.push('Very small hero pool — consider expanding');
-  if (!selectedRole) {
-    if (tankCount === 0) warnings.push('No tank heroes played');
-    if (damageCount === 0) warnings.push('No damage heroes played');
-    if (supportCount === 0) warnings.push('No support heroes played');
+
+  // Missing subroles — iOS shows the GAPS, not what you already have.
+  const has = (keys: string[]) => played.some(([k]) => keys.includes(k));
+  const missingSubroles: string[] = [];
+
+  if (selectedRole === 'tank') {
+    for (const [name, keys] of Object.entries(TANK_SUBROLES)) {
+      if (!has(keys)) missingSubroles.push(name);
+    }
+  } else if (selectedRole === 'damage') {
+    for (const [name, keys] of Object.entries(DAMAGE_SUBROLES)) {
+      if (!has(keys)) missingSubroles.push(name);
+    }
+  } else if (selectedRole === 'support') {
+    for (const [name, keys] of Object.entries(SUPPORT_SUBROLES)) {
+      if (!has(keys)) missingSubroles.push(name);
+    }
+  } else {
+    // No role selected: whole roles first, then subroles within roles that
+    // are actually played. iOS labels DPS subroles differently here.
+    if (tankCount === 0) missingSubroles.push('Tank');
+    if (damageCount === 0) missingSubroles.push('DPS');
+    if (supportCount === 0) missingSubroles.push('Support');
+
+    if (tankCount > 0) {
+      if (!has(TANK_SUBROLES['Shield Tank'])) missingSubroles.push('Shield Tank');
+      if (!has(TANK_SUBROLES['Dive Tank'])) missingSubroles.push('Dive Tank');
+    }
+    if (damageCount > 0) {
+      if (!has(DAMAGE_SUBROLES['Hitscan'])) missingSubroles.push('Hitscan DPS');
+      if (!has(DAMAGE_SUBROLES['Projectile'])) missingSubroles.push('Projectile DPS');
+    }
+    if (supportCount > 0) {
+      if (!has(SUPPORT_SUBROLES['Main Healer'])) missingSubroles.push('Main Healer');
+      if (!has(SUPPORT_SUBROLES['Flex Support'])) missingSubroles.push('Flex Support');
+    }
   }
 
-  // One-trick detection: >60% playtime (iOS uses time, not games)
+  // One-trick detection: >60% playtime (iOS uses time, not games).
+  // Reported on its own, not folded into warnings — it has its own callout.
   let oneTrick: string | undefined;
-  const totalTime = played.reduce((s, [, h]) => s + h.time_played, 0);
+  const totalTime = played.reduce((sum, [, h]) => sum + h.time_played, 0);
   if (totalTime > 0) {
     const sorted = [...played].sort((a, b) => b[1].time_played - a[1].time_played);
     if (sorted.length > 0 && sorted[0][1].time_played / totalTime > 0.6) {
       oneTrick = sorted[0][0];
-      warnings.push(`One-trick alert: ${oneTrick} has ${Math.round(sorted[0][1].time_played / totalTime * 100)}% of your playtime`);
     }
   }
 
@@ -408,21 +458,47 @@ export function analyzeHeroPool(
   return {
     diversityScore, diversityLabel, heroCount,
     tankCount, damageCount, supportCount,
-    warnings, subroles, oneTrick,
+    warnings, subroles, missingSubroles, oneTrick,
   };
 }
 
 // ---- Personalized Tips (role-specific, aligned with iOS) ----
+/**
+ * Tip tones mirror the iOS SF Symbol + colour pairs, so each tip reads as
+ * praise, a warning or a neutral observation at a glance rather than as a
+ * flat list of sentences.
+ */
+export type TipTone =
+  | 'warning'
+  | 'success'
+  | 'decline'
+  | 'fire'
+  | 'aim'
+  | 'star'
+  | 'tank'
+  | 'damage'
+  | 'heal'
+  | 'thumbs'
+  | 'team'
+  | 'pool';
+
+export interface CoachTip {
+  tone: TipTone;
+  text: string;
+}
+
 export function getPersonalizedTips(
   stats: PlayerStatsSummary,
   selectedRole?: string | null,
   heroes?: Record<string, HeroStatEntry>
-): string[] {
-  const tips: string[] = [];
+): CoachTip[] {
+  const tips: CoachTip[] = [];
   const roleData = selectedRole && stats.roles?.[selectedRole]
     ? stats.roles[selectedRole]
     : stats.general;
   if (!roleData) return tips;
+
+  const push = (tone: TipTone, text: string) => tips.push({ tone, text });
 
   const roleName = selectedRole
     ? selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)
@@ -448,61 +524,62 @@ export function getPersonalizedTips(
 
   // Death analysis
   if (deaths > highDeathThreshold) {
-    tips.push(`[${roleName}] Deaths (${deaths.toFixed(1)}/10min) are high. Focus on positioning and using cover more effectively.`);
+    push('warning', `[${roleName}] Deaths (${deaths.toFixed(1)}/10min) are high. Focus on positioning and using cover more effectively.`);
   } else if (deaths < lowDeathThreshold) {
-    tips.push(`[${roleName}] Excellent survival rate (${deaths.toFixed(1)}/10min). Your positioning is strong.`);
+    push('success', `[${roleName}] Excellent survival rate (${deaths.toFixed(1)}/10min). Your positioning is strong.`);
   }
 
   // Win rate analysis
   if (wr < 45) {
-    tips.push(`[${roleName}] Win rate is below average (${wr.toFixed(1)}%). Consider focusing on your best heroes in this role.`);
+    push('decline', `[${roleName}] Win rate is below average (${wr.toFixed(1)}%). Consider focusing on your best heroes in this role.`);
   } else if (wr >= 55) {
-    tips.push(`[${roleName}] Strong win rate of ${wr.toFixed(1)}%! You're performing well.`);
+    push('fire', `[${roleName}] Strong win rate of ${wr.toFixed(1)}%! You're performing well.`);
   }
 
   // KDA analysis
   if (kda < 2.0) {
-    tips.push(`[${roleName}] KDA of ${kda.toFixed(2)} could improve. Try to trade more efficiently.`);
+    push('aim', `[${roleName}] KDA of ${kda.toFixed(2)} could improve. Try to trade more efficiently.`);
   } else if (kda >= 4.0) {
-    tips.push(`[${roleName}] Outstanding KDA of ${kda.toFixed(2)}. Your fight impact is excellent.`);
+    push('star', `[${roleName}] Outstanding KDA of ${kda.toFixed(2)}. Your fight impact is excellent.`);
   }
 
-  // Role-specific tips
+  // Role-specific tips. iOS keeps the general observations below in the
+  // no-role branch only, so a role-filtered view stays about that role.
   if (selectedRole === 'tank') {
     if (damage < 6000) {
-      tips.push(`[Tank] Your damage output (${damage.toFixed(0)}/10min) is low. Tanks need to create space through damage pressure.`);
+      push('tank', `[Tank] Your damage output (${damage.toFixed(0)}/10min) is low. Tanks need to create space through damage pressure.`);
     }
     if (deaths > 6 && elims < 15) {
-      tips.push('[Tank] High deaths with low elims — you may be overextending. Play with your team and time engagements better.');
+      push('warning', '[Tank] High deaths with low elims — you may be overextending. Play with your team and time engagements better.');
     }
   } else if (selectedRole === 'damage') {
     if (damage < 5000) {
-      tips.push(`[DPS] Damage output (${damage.toFixed(0)}/10min) is below average. Focus on consistent damage and target priority.`);
+      push('damage', `[DPS] Damage output (${damage.toFixed(0)}/10min) is below average. Focus on consistent damage and target priority.`);
     }
     if (elims < 12) {
-      tips.push(`[DPS] Eliminations (${elims.toFixed(1)}/10min) could be higher. Look for picks on out-of-position enemies.`);
+      push('aim', `[DPS] Eliminations (${elims.toFixed(1)}/10min) could be higher. Look for picks on out-of-position enemies.`);
     }
   } else if (selectedRole === 'support') {
     if (healing < 5000) {
-      tips.push(`[Support] Healing output (${healing.toFixed(0)}/10min) is low. Prioritize keeping your team alive.`);
+      push('heal', `[Support] Healing output (${healing.toFixed(0)}/10min) is low. Prioritize keeping your team alive.`);
     }
     if (damage > 4000 && healing < 5000) {
-      tips.push('[Support] High damage but low healing — balance your playstyle. Heal first, damage in safe windows.');
+      push('fire', '[Support] High damage but low healing — balance your playstyle. Heal first, damage in safe windows.');
     }
     if (assists > 8) {
-      tips.push(`[Support] Great assist count (${assists.toFixed(1)}/10min)! You're enabling your team well.`);
+      push('thumbs', `[Support] Great assist count (${assists.toFixed(1)}/10min)! You're enabling your team well.`);
     }
-  }
-
-  // General tips
-  if (damage > 5000 && healing < 1000) {
-    tips.push('Very aggressive style (high damage, low healing). If you\'re Support, try to balance healing and damage output.');
-  }
-  if (healing > 5000 && damage < 2000) {
-    tips.push('You\'re heal-focused. Consider adding some damage during safe moments to help finish low-HP targets.');
-  }
-  if (assists < 2 && elims > 10) {
-    tips.push(`Low assists (${assists.toFixed(1)}/10min) despite good elims. Try to play more with your team.`);
+  } else {
+    // No role selected — general observations across all play.
+    if (damage > 5000 && healing < 1000) {
+      push('damage', "Very aggressive style (high damage, low healing). If you're Support, try to balance healing and damage output.");
+    }
+    if (healing > 5000 && damage < 2000) {
+      push('heal', "You're heal-focused. Consider adding some damage during safe moments to help finish low-HP targets.");
+    }
+    if (assists < 2 && elims > 10) {
+      push('team', `Low assists (${assists.toFixed(1)}/10min) despite good elims. Try to play more with your team.`);
+    }
   }
 
   // Hero pool advice
@@ -512,12 +589,12 @@ export function getPersonalizedTips(
     );
     if (roleHeroes.length < 2) {
       const roleText = selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1);
-      tips.push(`You have ${roleHeroes.length} ${roleText} hero(es) with 5+ games. Expanding your pool gives you more flexibility.`);
+      push('pool', `You have ${roleHeroes.length} ${roleText} hero(es) with 5+ games. Expanding your pool gives you more flexibility.`);
     }
   }
 
   if (tips.length === 0) {
-    tips.push('Keep up the good work! Focus on consistency and communication.');
+    push('success', 'Keep up the good work! Focus on consistency and communication.');
   }
 
   return tips;
