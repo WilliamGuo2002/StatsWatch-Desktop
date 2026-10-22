@@ -1,0 +1,40 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# build
+dist/
+out/
+build/
+release/
+*.tsbuildinfo
+
+# ow-electron / overwolf runtime packages
+.overwolf/
+ow-packages/
+
+# local data (never commit — contains personal match data)
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+data/
+clips/
+*.mp4
+*.webm
+
+# event dumps may contain battletags of real players
+tests/fixtures/*.jsonl
+!tests/fixtures/.gitkeep
+
+# secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+
+# editor / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

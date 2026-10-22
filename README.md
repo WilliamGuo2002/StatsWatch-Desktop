@@ -1,1 +1,76 @@
-# StatsWatch-Desktop
+<div align="center">
+
+# StatsWatch Desktop
+
+### 守望先锋 Windows 数据伴侣 · Overwatch companion for Windows
+
+**自动记录每一局 · 深度对局分析 · 全功能免费**
+**Auto-track every match · Deep match analysis · Everything free**
+
+</div>
+
+---
+
+## 这是什么
+
+Windows 端的守望先锋数据工具，把两件事合在一起：
+
+- **战绩查询** — 查任意玩家的段位、生涯数据、英雄池、Meta、英雄百科（移植自 [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker)）
+- **实时对局检测** — 开着软件打游戏，自动记录这一局尽可能多的数据：完整记分板、击杀时间轴、团战拆解、英雄切换、自动剪辑
+
+**所有功能免费开放**，包括同类软件放在订阅墙后面的深度分析、对位矩阵、宿敌系统和教练建议。
+
+## 为什么能全免费
+
+同类软件把对局数据上传到自己的服务器处理，成本随用户数线性增长，所以必须收订阅费。
+
+StatsWatch Desktop 是**本地优先**的：原始对局数据、时间序列、视频剪辑全部留在你自己的电脑上，分析在本机完成。看自己的战绩不产生任何服务器请求。云端只保存极小的聚合数据，用于好友对比和全球基准。
+
+这同时意味着：**更快**（本地 SQLite 即时查询）、**更私密**（原始数据不出本机）、**可持续**（成本不随用户数膨胀）。
+
+## 怎么拿到对局数据
+
+暴雪没有公开的对局 API。本项目通过 [Overwolf 的 Game Events Provider](https://dev.overwolf.com/ow-native/live-game-data-gep/supported-games/overwatch/) 读取游戏事件——这是守望先锋伴侣应用的官方集成途径。
+
+**不修改游戏、不注入进程、不读取游戏内存。**
+
+## 状态
+
+🚧 设计阶段。完整技术设计见 **[Docs/DESIGN.md](Docs/DESIGN.md)**，GEP 字段与 ID 对照表见 **[Docs/GEP-REFERENCE.md](Docs/GEP-REFERENCE.md)**。
+
+| 里程碑 | 内容 | 状态 |
+|---|---|---|
+| M0 | GEP 接通 + 事件流 dump | ⬜ |
+| M1 | 采集落库 + 比赛历史 + 记分板 | ⬜ |
+| M2 | 生涯查询（移植 StatsWatch） | ⬜ |
+| M3 | 派生分析（团战/对位/宿敌/教练） | ⬜ |
+| M4 | 游戏内 overlay + 自动剪辑 | ⬜ |
+| M5 | 云端可选功能（好友/排行榜/基准） | ⬜ |
+| M6 | 打包发布 | ⬜ |
+
+## 系统要求
+
+- Windows（Overwolf 的游戏事件、overlay、录制目前仅支持 Windows）
+- 能跑守望先锋的机器
+
+## 技术栈
+
+| 层 | 选型 |
+|---|---|
+| 运行时 | ow-electron（Overwolf 的 Electron 发行版） |
+| 语言 | TypeScript |
+| UI | React + Vite |
+| 本地库 | SQLite (better-sqlite3) |
+| 生涯数据 | [OverFast API](https://overfast-api.tekrop.fr) |
+| 对局数据 | Overwolf GEP |
+| 云端（可选） | Cloudflare Workers + D1 + R2 |
+
+## 免责声明
+
+本项目为**非官方**粉丝作品，与暴雪娱乐（Blizzard Entertainment, Inc.）无任何关联、背书或授权关系。*守望先锋*（Overwatch）及所有相关英雄、名称、图像和素材均为暴雪娱乐的商标或注册商标。
+
+---
+
+<div align="center">
+为守望先锋社区用心打造 🎮
+</div>
