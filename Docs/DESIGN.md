@@ -1,6 +1,8 @@
 # StatsWatch Desktop — 设计文档
 
-> Windows 端守望先锋数据伴侣：**StatsWatch 的战绩查询** + **OverBuddy 的实时对局检测**，全部功能免费。
+> Windows 端守望先锋数据伴侣：**StatsWatch 的战绩查询** + **自动对局记录与赛后复盘**，全部功能免费。
+>
+> **这是一个赛后复盘工具，不是软性外挂。** 见 [§1 红线](#红线不可逾越)。
 
 - 状态：设计阶段（v0 草案）
 - 最后更新：2026-10-22
@@ -24,12 +26,54 @@ OverBuddy 的全部功能——**包括它收 $5.99/月 的付费功能**——�
 3. 保留并移植 StatsWatch 的生涯查询能力（查任意玩家、英雄百科、Meta、对比、Smart Coach）。
 4. 成本随用户数**近似常数**增长，不会因为用户变多而被迫收费或关停。
 5. 不改游戏、不注入、不读内存——走官方认可的集成路径。
+6. **对局进行中不向玩家呈现任何信息。** 记录在局内发生，呈现一律在局后。
+
+### 非目标（永不做）
+- **游戏内实时 overlay**，或任何在对局进行中向玩家呈现数据的形式
+- 任何游戏本身不显示的信息（敌方位置、血量、大招充能）——GEP 也拿不到，但即便拿得到也不做
+- 对局进行中的教练建议、换英雄提示、对手情报
 
 ### 非目标（v1 不做）
-- macOS / Lin（Overwolf 的 GEP、overlay、录制目前只支持 Windows，Mac/Linux 仅支持广告服务）
-- 主机平台实时追踪（GEP 只能读 PC 客户端）
+- macOS / Linux（Overwolf 的 GEP、录制目前只支持 Windows，Mac/Linux 仅支持广告服务）
+- 主机平台追踪（GEP 只能读 PC 客户端）
 - 云端视频托管
 - 比赛回放（replay）解析
+
+### 红线（不可逾越）
+
+> **对局进行中，本软件不向玩家呈现任何对局信息。**
+
+2018 年 9 月，暴雪公开针对 Visor 和 Pursuit 发出警告，社区经理 Tom Powers 的表述是这些应用"impede on the competitive integrity of Overwatch"，客服信件明确提到继续使用可能导致永久封号。
+
+值得注意的是这两者并不一样：**Visor** 提供实时游戏内提示（敌方位置、血量、大招状态）；**Pursuit** 只做赛后统计，没有任何实时信息——**而它也被卷了进去**。
+
+这条红线因此划在"呈现时机"上，而不是"信息是否敏感"上。本项目做的是 Pursuit 那一类，所以要比 Pursuit 当年站得更靠后一步。
+
+#### 如何在代码里强制
+
+单一闸门，位于主进程：
+
+```
+game_info.game_state == "match_in_progress"
+    → 渲染进程收不到任何本局数据（IPC 层拦截，不是 UI 层隐藏）
+    → 主窗口只显示"正在记录本局"，无任何数字
+match_end
+    → 解锁，数据下发
+```
+
+- 拦截点在 **IPC 层**而非 UI 层：UI 拿不到数据，不存在"把面板藏起来但数据已经在前端"的情况
+- 这是一条可测试的不变量 → `tests/` 里必须有一条针对它的测试
+- 录制（视频）不受此限——录制不是呈现，与 OBS / ShadowPlay 同类，赛后才看
+
+#### 代价
+
+放弃 OverBuddy 的 "Live matches" 和游戏内实时 overlay。这是主动放弃，不是做不到。
+
+#### 收益
+
+- **`overlay` 包整个不用了**，连带去掉注入（Overwolf 文档中的 "OOPO-injected game window"）。"不注入游戏"这句话在项目全生命周期内都成立，不会在 M4 失效
+- 自动剪辑改由评分算法自动触发 + Electron 的 `globalShortcut` 注册全局热键，不需要游戏内窗口
+- 源码公开 + PolyForm Strict 允许自行编译验证 → **任何人都能自己检查这条红线有没有被遵守**
 
 ---
 
@@ -167,14 +211,15 @@ damage / healed / mitigated    — 浮点累计值
          ▼                    │
 ┌──────────────────┐   ┌──────────────────────────────────┐
 │ 渲染进程 (React) │   │ 云端（Cloudflare，极小）         │
-│ 主界面           │   │ Workers + D1 + R2                │
-│ overlay 窗口     │   │ · 好友 / 排行榜（聚合行）        │
+│ 主界面（局后才  │   │ Workers + D1 + R2                │
+│ 收到对局数据）  │   │ · 好友 / 排行榜（聚合行）        │
 └──────────────────┘   │ · 全球百分位基准（每日 1 个 JSON）│
                        └──────────────────────────────────┘
 ```
 
-### 四条铁律
+### 五条铁律
 
+0. **对局进行中不呈现任何信息。** 见 §1 红线。闸门在 IPC 层。
 1. **原始数据永不出本机。** 每局的 roster 时间序列、kill feed、视频全部留在用户磁盘。
 2. **99% 的读取打本地 SQLite。** "看我的战绩"不产生任何服务器请求——这是扩容能成立的根本原因，也是带宽成本压到接近零的原因。
 3. **云端只存聚合，不存单局。** 见 §7。
@@ -351,7 +396,9 @@ CREATE TABLE career_snapshots (
 | 个人风格画像 | SW | OverFast + 本地 | 移植 `PlayStyleCard` |
 | 个人英雄 S/A/B/C/D 分级 | SW | 本地 + 生涯 | 移植 `HeroTierListSection`，现在有单局数据可做得更准 |
 | 分享卡片 | SW | 本地 | 移植 `ShareCardView` |
-| **游戏内实时 overlay** | 新 | `overlay` 包 + GEP | 实时记分板 + 本局 K/D/A + 团战动量条 |
+| ~~游戏内实时 overlay~~ | — | — | **主动放弃**，见 §1 红线 |
+| ~~Live matches~~ | OB💰 | — | **主动放弃**，见 §1 红线 |
+| 局后即时复盘 | 新 | 本地 | `match_end` 触发，自动弹出本局复盘 |
 | **会话自动校验** | 新 | GEP + OverFast 交叉 | §7.7 — iOS 和 OverBuddy 都做不到 |
 | 多语言 | SW | — | 沿用 5 语言：EN / 简中 / 한국어 / 日本語 / ES |
 
@@ -528,7 +575,7 @@ user_hero_season(user_id, season, hero_id, games, wins,
 
 | 层 | 选型 | 理由 |
 |---|---|---|
-| 运行时 | **ow-electron**（Overwolf 的 Electron 发行版） | 唯一能同时拿到 GEP + overlay + recorder 又能自行分发的方案 |
+| 运行时 | **ow-electron**（Overwolf 的 Electron 发行版） | 唯一能拿到 GEP + recorder 又能自行分发的方案。**只用 `gep` / `recorder` / `utility` 三个包，不用 `overlay`** |
 | 语言 | TypeScript | 与 Swift 的模型层对应关系清晰，便于移植 |
 | UI | React + Vite | **直接复用 [StatsWatch 网页版](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)**（已是 TS + React，含 `api/overwatchApi.ts`、career/compare/heroes/profile/progress/search 组件、5 语言 i18n、`types/models.ts`） |
 | 图表 | Recharts / visx | 对应 iOS 的 Swift Charts |
@@ -554,7 +601,6 @@ StatsWatch-Desktop/
 │  ├─ renderer/              ← React UI
 │  │  ├─ views/              ← 对应 iOS 的 Views/
 │  │  └─ components/
-│  ├─ overlay/               ← 游戏内 overlay 窗口
 │  └─ shared/                ← 类型、英雄/地图/模式 ID 映射、i18n
 ├─ cloud/                    ← Cloudflare Workers（可选部分）
 └─ tests/                    ← analysis/ 的单测（用录制的事件流做 fixture）
@@ -585,8 +631,9 @@ OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地�
 ### M3 — 派生分析（= OverBuddy 的付费区）
 团战切分 + 动量；英雄切换时间轴；回合拆解；影响力分与评级；聚光灯/MVP；对位矩阵；阵容默契；宿敌；日报/周报；生涯进展曲线；教练规则引擎。
 
-### M4 — Overlay 与剪辑
-游戏内实时 overlay（记分板 + 动量条）；replay 缓冲 + 自动剪辑评分 + 剪辑库；热键手动存片。
+### M4 — 自动剪辑
+replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Electron `globalShortcut`，非游戏内）。
+> **不含游戏内 overlay**，见 §1 红线。录制属于 OBS / ShadowPlay 同类行为，赛后观看。
 
 ### M5 — 云端（可选功能）
 匿名基准上报 + 每日百分位聚合；好友；排行榜快照；挑战。
@@ -605,9 +652,35 @@ OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地�
 | 代码签名证书 | 待办 | 自行分发必需；OV 证书约 $100–300/年 |
 | GEP 随游戏更新中断 | 持续风险 | UI 显示事件状态；接 Overwolf 状态 API；算法对缺失字段容错 |
 | OverFast API 限流 / 停服 | 中等风险 | 本地缓存 + 退避；它是单人维护的开源项目，考虑备用数据源 |
-| 封号风险 | 低但非零 | 不注入不改游戏。OverBuddy 自称"经暴雪批准的集成"但无第三方证实；历史上 OverTrack 出现过误封后撤销。首页需明确告知 |
+| **封号风险** | **非零，最重要的开放问题** | 见下方专节 |
 | Cloudflare 价目变动 | 低 | 成本模型留在 `Docs/COST-MODEL.md`，上线前复核 |
 | 商标 / ToS | 需处理 | 照搬 iOS 版的非官方免责声明 |
+
+---
+
+### 11.1 封号风险（项目最重要的开放问题）
+
+**已知事实**
+
+- 2018 年 9 月暴雪公开警告 Visor 与 Pursuit 用户，称继续使用可能导致永久封号。Pursuit **只做赛后统计**，仍被卷入
+- Pursuit 最终关停的直接原因是团队整体加入 Twitch、产品未随行，**不是**被暴雪强制关闭
+- 目前能找到的唯一官方 Overwatch 立场仍是 2018 年那次。**没有**找到更新的官方表态
+- 现状明显变化：Overwolf GEP 已把 Overwatch 列入 **Production** 环境，OverBuddy 正常运营并宣称使用"officially Blizzard-approved game integration"
+- **该"Blizzard-approved"说法无任何第三方证实**，仅为厂商自述
+
+**我们的立场**
+
+遵守 §1 红线，使本项目严格处于"赛后复盘"一侧，并且比 Pursuit 当年更保守（Pursuit 有网页端实时查看，我们连局内呈现都不做）。
+
+**动工前必须做的事**
+
+1. 向 Overwolf DevRel 问清楚：Overwatch 的 GEP 集成与暴雪之间究竟是正式授权，还是"暴雪未加干预"？答案直接决定 M0 之后的做法
+2. 确认 `recorder` 包的画面捕获机制是否 hook 游戏进程（视频捕获作为一个品类被普遍接受，但机制需要查实）
+3. M0 测试阶段先用**自定义房间 / 人机对战**取 roster 数据，不要用主账号直接打排位
+
+**必须告知用户**
+
+README 和应用内首次启动页都要如实写明：这是非官方第三方软件，暴雪从未公开认可过任何此类工具，使用存在非零风险，由用户自行判断。不得引用 OverBuddy 那句未经证实的"经暴雪批准"为自己背书。
 
 ---
 
@@ -615,7 +688,7 @@ OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地�
 
 本项目为**非官方**粉丝作品，与暴雪娱乐（Blizzard Entertainment, Inc.）无任何关联、背书或授权关系。*守望先锋*（Overwatch）及所有相关英雄、名称、图像和素材均为暴雪娱乐的商标或注册商标。
 
-本软件不修改游戏、不注入进程、不读取游戏内存。所有对局数据通过 Overwolf 官方游戏事件接口获取，生涯数据来自公开可见的个人资料。
+本软件不修改游戏、不注入进程、不读取游戏内存，**且在对局进行中不向玩家呈现任何信息**。所有对局数据通过 Overwolf 官方游戏事件接口获取，生涯数据来自公开可见的个人资料。
 
 ---
 
@@ -626,10 +699,11 @@ OverFast 全部接口；玩家查询/资料/段位；英雄百科；Meta；地�
 - [ow-electron GEP API](https://dev.overwolf.com/ow-electron/reference/Overwolf-electron-APIs/gep/Overview)
 - [ow-electron 包总览（gep / overlay / recorder / utility / crn）](https://dev.overwolf.com/ow-electron/reference/Overwolf-electron-APIs/packages/Overview/)
 - [ow-electron recorder API](https://dev.overwolf.com/ow-electron/reference/Overwolf-electron-APIs/recorder/Overview/)
-- [ow-electron overlay API](https://dev.overwolf.com/ow-electron/reference/Overwolf-electron-APIs/overlay/Overview/)
 - [ow-electron FAQ（分发与平台支持）](https://dev.overwolf.com/ow-electron/getting-started/onboarding-resources/ow-electron-faq)
 - [Overwolf 官方 Overwatch 事件示例应用](https://github.com/overwolf/events-sample-apps/tree/master/overwatch-events-sample-app)
 - [OverFast API](https://overfast-api.tekrop.fr)
 - [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker) ｜ [StatsWatch 网页版（TS + React，M2 的复用来源）](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)
 - [OverBuddy](https://overbuddy.com/) ｜ [FAQ](https://overbuddy.com/faq/) ｜ [Premium](https://overbuddy.com/premium/)
 - [Cloudflare Workers 定价](https://developers.cloudflare.com/workers/platform/pricing/)
+- [2018 年暴雪针对 Visor / Pursuit 的警告（Engadget）](https://www.engadget.com/2018-09-20-overwatch-blizzard-visor-pursuit-ban.html) ｜ [Game Developer 报道](https://www.gamedeveloper.com/programming/blizzard-cracks-down-on-third-party-data-tracking-apps-in-i-overwatch-i-)
+- [Pursuit 团队加入 Twitch 的关停公告](https://medium.com/@jameszsun/the-pursuit-team-joins-twitch-2729c6ff803)
