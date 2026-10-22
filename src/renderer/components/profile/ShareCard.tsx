@@ -155,6 +155,21 @@ export default function ShareCard({ summary, stats, topHeroes, heroInfoList, gam
                   textAlign: 'center',
                 }}
               >
+                {/* iOS puts Games alongside Win Rate, KDA and Hours. */}
+                <div style={{ fontSize: 10, color: '#9ca3af' }}>Games</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#22c55e' }}>
+                  {general.games_played}
+                </div>
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  background: '#1f2937',
+                  borderRadius: 8,
+                  padding: 8,
+                  textAlign: 'center',
+                }}
+              >
                 <div style={{ fontSize: 10, color: '#9ca3af' }}>Time</div>
                 <div style={{ fontSize: 16, fontWeight: 700 }}>
                   {formatTimePlayed(general.time_played)}

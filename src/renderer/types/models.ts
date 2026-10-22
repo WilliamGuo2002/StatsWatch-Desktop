@@ -227,6 +227,9 @@ export interface ActiveSession {
     winrate: number;
     kda: number;
     gamesPlayed: number;
+    /** Optional: sessions started before these were recorded have neither. */
+    gamesWon?: number;
+    gamesLost?: number;
     elimsPer10: number;
     deathsPer10: number;
     damagePer10: number;

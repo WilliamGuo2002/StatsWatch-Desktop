@@ -89,6 +89,8 @@ interface CompareRow {
   valueA: number;
   valueB: number;
   format: (v: number) => string;
+  /** Deaths: the smaller number is the better one. */
+  lowerIsBetter?: boolean;
 }
 
 function ComparisonBars({ rows }: { rows: CompareRow[] }) {
@@ -96,7 +98,11 @@ function ComparisonBars({ rows }: { rows: CompareRow[] }) {
     <div className="space-y-4">
       {rows.map((row) => {
         const max = Math.max(row.valueA, row.valueB, 1);
-        const aWins = row.valueA >= row.valueB;
+        // Without this, the hero who DIES MORE was bolded as the winner of
+        // the Deaths/10 row. The player comparison page already had it.
+        const aWins = row.lowerIsBetter
+          ? row.valueA <= row.valueB
+          : row.valueA >= row.valueB;
         return (
           <div key={row.label}>
             <div className="flex justify-between text-sm mb-1">
@@ -171,7 +177,7 @@ export default function HeroComparisonPage() {
         { label: t('Games'), valueA: statsA.games_played, valueB: statsB.games_played, format: (v) => v.toFixed(0) },
         { label: t('KDA'), valueA: statsA.kda, valueB: statsB.kda, format: (v) => formatStat(v) },
         { label: t('Elims/10'), valueA: statsA.average.eliminations, valueB: statsB.average.eliminations, format: (v) => formatStat(v) },
-        { label: t('Deaths/10'), valueA: statsA.average.deaths, valueB: statsB.average.deaths, format: (v) => formatStat(v) },
+        { label: t('Deaths/10'), valueA: statsA.average.deaths, valueB: statsB.average.deaths, format: (v) => formatStat(v), lowerIsBetter: true },
         { label: t('Dmg/10'), valueA: statsA.average.damage, valueB: statsB.average.damage, format: (v) => formatNumber(v) },
         { label: t('Heal/10'), valueA: statsA.average.healing, valueB: statsB.average.healing, format: (v) => formatNumber(v) },
         { label: t('Assists/10'), valueA: statsA.average.assists, valueB: statsB.average.assists, format: (v) => formatStat(v) },

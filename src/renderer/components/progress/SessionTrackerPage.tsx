@@ -12,6 +12,8 @@ import ErrorMessage from '../common/ErrorMessage';
 interface SessionResult {
   gamesPlayed: number;
   estimatedWins: number;
+  /** True when wins/losses came from games_won/games_lost rather than a guess. */
+  exact: boolean;
   estimatedLosses: number;
   deltas: {
     label: string;
@@ -48,6 +50,8 @@ export default function SessionTrackerPage() {
       deathsPer10: gen.average.deaths,
       damagePer10: gen.average.damage,
       healingPer10: gen.average.healing,
+      gamesWon: gen.games_won,
+      gamesLost: gen.games_lost,
     });
   };
 
@@ -65,14 +69,38 @@ export default function SessionTrackerPage() {
 
       const start = session.startSnapshot;
       const gamesPlayed = gen.games_played - start.gamesPlayed;
-      const wrDelta = gen.winrate - start.winrate;
-      const estimatedWins = Math.max(0, Math.round(gamesPlayed * (0.5 + wrDelta)));
-      const estimatedLosses = Math.max(0, gamesPlayed - estimatedWins);
+
+      // OverFast reports games_won and games_lost directly, so the session
+      // result is a subtraction, not an estimate.
+      //
+      // The previous formula was `games * (0.5 + wrDelta)` with wrDelta in
+      // PERCENTAGE POINTS, so a +1.4% swing over 10 games claimed 19 wins
+      // out of 10 and 0 losses; with no swing at all it always answered
+      // exactly half. iOS estimates from cumulative winrate, which is only
+      // needed because its snapshot never stored the win count.
+      let estimatedWins: number;
+      let estimatedLosses: number;
+      let exact: boolean;
+
+      if (start.gamesWon !== undefined && start.gamesLost !== undefined) {
+        estimatedWins = Math.max(0, gen.games_won - start.gamesWon);
+        estimatedLosses = Math.max(0, gen.games_lost - start.gamesLost);
+        exact = true;
+      } else {
+        // Session started before win counts were recorded: fall back to
+        // deriving them from cumulative totals, as iOS does.
+        const endWins = Math.round((gen.games_played * gen.winrate) / 100);
+        const startWins = Math.round((start.gamesPlayed * start.winrate) / 100);
+        estimatedWins = Math.max(0, endWins - startWins);
+        estimatedLosses = Math.max(0, gamesPlayed - estimatedWins);
+        exact = false;
+      }
 
       const result: SessionResult = {
         gamesPlayed: Math.max(0, gamesPlayed),
         estimatedWins,
         estimatedLosses,
+        exact,
         deltas: [
           {
             label: t('Win Rate'),
@@ -240,11 +268,15 @@ export default function SessionTrackerPage() {
               <p className="text-2xl font-bold text-ow-text">{sessionResult.gamesPlayed}</p>
             </div>
             <div className="bg-ow-darker rounded-lg p-3 text-center">
-              <p className="text-xs text-ow-text-muted">{t('Est. Wins')}</p>
+              <p className="text-xs text-ow-text-muted">
+                {sessionResult.exact ? t('Wins') : t('Est. Wins')}
+              </p>
               <p className="text-2xl font-bold text-green-400">{sessionResult.estimatedWins}</p>
             </div>
             <div className="bg-ow-darker rounded-lg p-3 text-center">
-              <p className="text-xs text-ow-text-muted">{t('Est. Losses')}</p>
+              <p className="text-xs text-ow-text-muted">
+                {sessionResult.exact ? t('Losses') : t('Est. Losses')}
+              </p>
               <p className="text-2xl font-bold text-red-400">{sessionResult.estimatedLosses}</p>
             </div>
           </div>
