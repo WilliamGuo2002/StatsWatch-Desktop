@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.preload.tsbuildinfo",
+    "target": "es2023",
+    "lib": [
+      "ES2023",
+      "DOM"
+    ],
+    "module": "node16",
+    "moduleResolution": "node16",
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "electron": [
+        "./node_modules/@overwolf/ow-electron"
+      ]
+    },
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noEmit": true
+  },
+  "include": [
+    "src/preload",
+    "src/shared"
+  ]
+}

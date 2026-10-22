@@ -31,7 +31,24 @@ export class ApiError extends Error {
   }
 }
 
-const bridge = window.statswatch.overfast;
+/**
+ * Resolved lazily, not at module scope.
+ *
+ * Reading window.statswatch while the module is being evaluated means a
+ * missing preload takes the whole app down before React mounts, and the
+ * user gets a blank window with nothing to go on. Lazy access turns that
+ * into an error the UI can actually show.
+ */
+function bridgeOrThrow() {
+  const api = window.statswatch;
+  if (!api?.overfast) {
+    throw new ApiError(
+      'bridgeUnavailable',
+      'The app could not reach its own main process. The preload script did not load.'
+    );
+  }
+  return api.overfast;
+}
 
 /** Rethrow the main process's error shape as a real ApiError. */
 function rethrow(err: unknown): never {
@@ -48,46 +65,46 @@ function wrap<T>(p: Promise<T>): Promise<T> {
 }
 
 export function searchPlayers(name: string): Promise<PlayerSearchResponse> {
-  return wrap(bridge.searchPlayers<PlayerSearchResponse>(name));
+  return wrap(bridgeOrThrow().searchPlayers<PlayerSearchResponse>(name));
 }
 
 export function getPlayerSummary(playerId: string): Promise<PlayerSummary> {
-  return wrap(bridge.playerSummary<PlayerSummary>(playerId));
+  return wrap(bridgeOrThrow().playerSummary<PlayerSummary>(playerId));
 }
 
 export function getPlayerStatsSummary(
   playerId: string,
   gamemode: GameMode = 'competitive'
 ): Promise<PlayerStatsSummary> {
-  return wrap(bridge.playerStatsSummary<PlayerStatsSummary>(playerId, gamemode));
+  return wrap(bridgeOrThrow().playerStatsSummary<PlayerStatsSummary>(playerId, gamemode));
 }
 
 export function getPlayerCareerStats(
   playerId: string,
   gamemode: GameMode = 'competitive'
 ): Promise<Record<string, CareerStatCategory[]>> {
-  return wrap(bridge.playerCareerStats<Record<string, CareerStatCategory[]>>(playerId, gamemode));
+  return wrap(bridgeOrThrow().playerCareerStats<Record<string, CareerStatCategory[]>>(playerId, gamemode));
 }
 
 export function getHeroes(): Promise<HeroInfo[]> {
-  return wrap(bridge.heroes<HeroInfo[]>());
+  return wrap(bridgeOrThrow().heroes<HeroInfo[]>());
 }
 
 export function getHeroDetail(heroKey: string): Promise<HeroDetail> {
-  return wrap(bridge.heroDetail<HeroDetail>(heroKey));
+  return wrap(bridgeOrThrow().heroDetail<HeroDetail>(heroKey));
 }
 
 export function getHeroGlobalStats(
   platform: string = 'pc',
   gamemode: GameMode = 'competitive'
 ): Promise<HeroGlobalStat[]> {
-  return wrap(bridge.heroGlobalStats<HeroGlobalStat[]>(platform, gamemode));
+  return wrap(bridgeOrThrow().heroGlobalStats<HeroGlobalStat[]>(platform, gamemode));
 }
 
 export function getMaps(): Promise<MapInfo[]> {
-  return wrap(bridge.maps<MapInfo[]>());
+  return wrap(bridgeOrThrow().maps<MapInfo[]>());
 }
 
 export function getGamemodes(): Promise<GamemodeInfo[]> {
-  return wrap(bridge.gamemodes<GamemodeInfo[]>());
+  return wrap(bridgeOrThrow().gamemodes<GamemodeInfo[]>());
 }

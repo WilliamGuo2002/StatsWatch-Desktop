@@ -43,8 +43,17 @@ async function waitForServer(url, timeoutMs = 60_000) {
 
 run(npx, ['vite']);
 
-// Main and preload are plain tsc output; rebuild them on change.
+// Main is plain tsc output; rebuild on change.
 run(npx, ['tsc', '-p', 'tsconfig.main.json', '--watch', '--preserveWatchOutput']);
+
+// The preload MUST be a single bundled file: it runs sandboxed, where
+// require() is limited to electron and a few built-ins, so a relative
+// require('../shared/ipc') throws and the bridge is never installed.
+run(npx, [
+  'esbuild', 'src/preload/index.ts', '--bundle', '--platform=node',
+  '--format=cjs', '--external:electron', '--outfile=dist/preload/index.js',
+  '--sourcemap', '--watch=forever',
+]);
 
 await waitForServer(DEV_URL);
 
