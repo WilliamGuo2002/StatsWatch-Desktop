@@ -667,6 +667,8 @@ replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Elec
 - 目前能找到的唯一官方 Overwatch 立场仍是 2018 年那次。**没有**找到更新的官方表态
 - 现状明显变化：Overwolf GEP 已把 Overwatch 列入 **Production** 环境，OverBuddy 正常运营并宣称使用"officially Blizzard-approved game integration"
 - **该"Blizzard-approved"说法无任何第三方证实**，仅为厂商自述
+- OverBuddy 确实要求绑定战网（上手流程第 2 步："connect your account with your Battle.net BattleTag"），但那是**身份验证，不是数据通道**，见 §11.2。注册 OAuth 客户端是自助的，**不能**为游戏集成那部分背书
+- 2026 年 10 月有开发者在暴雪开发者论坛**申请**守望先锋对局数据 API 访问权限 —— 需要申请即说明至今没有，帖子无暴雪回复
 
 **我们的立场**
 
@@ -681,6 +683,37 @@ replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Elec
 **必须告知用户**
 
 README 和应用内首次启动页都要如实写明：这是非官方第三方软件，暴雪从未公开认可过任何此类工具，使用存在非零风险，由用户自行判断。不得引用 OverBuddy 那句未经证实的"经暴雪批准"为自己背书。
+
+### 11.2 战网 OAuth：能做什么、不能做什么
+
+OverBuddy 要求绑定战网账号，这容易让人以为对局数据来自暴雪官方接口。查证后**不是**。
+
+**暴雪 OAuth 的能力边界**（[官方文档](https://community.developer.battle.net/documentation/guides/using-oauth)）
+
+| 项 | 结论 |
+|---|---|
+| 无 scope 时能拿到 | **account ID + BattleTag，仅此而已** |
+| 可申请的 scope | `wow.profile` · `sc2.profile` · `d3.profile` · `openid` |
+| 守望先锋 scope | **不存在** |
+| Community API 覆盖 | Battle.net · Diablo III · Hearthstone · StarCraft II · WoW · WoW Classic（**无守望先锋**） |
+| 注册客户端 | **自助**，Developer Portal 点 Create New Client，无审批 |
+| access token 有效期 | 24 小时 |
+| 端点 | `https://oauth.battle.net/authorize` · `/token` · `/userinfo` · `/check_token`（国服 `oauth.battlenet.com.cn`） |
+
+**结论：它是登录，不是数据源。** 绑定之后拿到的只是"这个人确实是 `xxx#1234`"。对局数据仍然只能走 GEP，§11.1 的风险判断不因此改变。
+
+**但它解决了 M5 的一个真问题。**
+
+本地优先架构下，GEP 给的 `battle_tag` 是**客户端自报**的。本项目源码公开、协议允许自行编译，所以有人可以改一行把自己报成任意战网 ID，刷进排行榜或冒充他人出现在别人的宿敌列表里。
+
+`openid` scope + `/userinfo` 能给出**暴雪背书的**身份，是唯一能堵上这个洞的办法。
+
+**因此的设计决定**
+
+- M0–M4 **不需要**战网登录。本地优先意味着看自己的数据不需要向任何人证明身份，不该为了功能而要求登录
+- M5 上线好友/排行榜时，**上报聚合数据必须经过 OAuth 验证的 BattleTag**，不接受客户端自报的值
+- 登录始终是**可选**的：不登录 = 完整的本地功能；登录 = 额外解锁社交功能
+- 自助注册拿 client_id/client_secret，client_secret **只存在于 Cloudflare Worker**，绝不进客户端
 
 ---
 
@@ -704,6 +737,7 @@ README 和应用内首次启动页都要如实写明：这是非官方第三方�
 - [OverFast API](https://overfast-api.tekrop.fr)
 - [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker) ｜ [StatsWatch 网页版（TS + React，M2 的复用来源）](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)
 - [OverBuddy](https://overbuddy.com/) ｜ [FAQ](https://overbuddy.com/faq/) ｜ [Premium](https://overbuddy.com/premium/)
+- [Battle.net OAuth 官方文档（scope 与端点）](https://community.developer.battle.net/documentation/guides/using-oauth)
 - [Cloudflare Workers 定价](https://developers.cloudflare.com/workers/platform/pricing/)
 - [2018 年暴雪针对 Visor / Pursuit 的警告（Engadget）](https://www.engadget.com/2018-09-20-overwatch-blizzard-visor-pursuit-ban.html) ｜ [Game Developer 报道](https://www.gamedeveloper.com/programming/blizzard-cracks-down-on-third-party-data-tracking-apps-in-i-overwatch-i-)
 - [Pursuit 团队加入 Twitch 的关停公告](https://medium.com/@jameszsun/the-pursuit-team-joins-twitch-2729c6ff803)
