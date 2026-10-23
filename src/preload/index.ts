@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC } from '../shared/ipc';
-import type { CaptureState, IpcErrorShape } from '../shared/ipc';
+import type { CaptureState, DumpFileView, GepStatusView, IpcErrorShape } from '../shared/ipc';
 import type { StatsWatchApi } from '../shared/api';
 
 type IpcResult<T> = { ok: true; data: T } | { ok: false; error: IpcErrorShape };
@@ -38,6 +38,9 @@ const api: StatsWatchApi = {
 
   capture: {
     getState: () => call<CaptureState>(IPC.capture.getState),
+    getGepStatus: () => call<GepStatusView>(IPC.capture.getGepStatus),
+    listDumps: () => call<DumpFileView[]>(IPC.capture.listDumps),
+    revealDumps: () => call<boolean>(IPC.capture.revealDumps),
     onStateChanged: (cb: (s: CaptureState) => void) => {
       const listener = (_e: unknown, s: CaptureState) => cb(s);
       ipcRenderer.on(IPC.capture.onStateChanged, listener);

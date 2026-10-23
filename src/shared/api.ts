@@ -5,7 +5,7 @@
  * it without pulling the preload (and therefore electron) into its
  * TypeScript project. The preload implements this interface.
  */
-import type { CaptureState } from './ipc';
+import type { CaptureState, DumpFileView, GepStatusView } from './ipc';
 
 export interface OverfastBridge {
   searchPlayers<T>(name: string): Promise<T>;
@@ -23,6 +23,10 @@ export interface CaptureBridge {
   getState(): Promise<CaptureState>;
   /** Returns an unsubscribe function. */
   onStateChanged(cb: (s: CaptureState) => void): () => void;
+  getGepStatus(): Promise<GepStatusView>;
+  listDumps(): Promise<DumpFileView[]>;
+  /** Opens the dump folder in Explorer. */
+  revealDumps(): Promise<boolean>;
 }
 
 export interface StatsWatchApi {

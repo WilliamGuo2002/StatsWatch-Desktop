@@ -20,6 +20,9 @@
 import { IpcMainInvokeEvent, WebContents } from 'electron';
 import { CaptureState, GameState, IPC } from '../../shared/ipc';
 import { handle } from './envelope';
+import { shell } from 'electron';
+import { dumper } from '../gep/dumper';
+import { getGepStatus, onGepStatusChanged } from '../gep/gameEvents';
 
 export class MatchInProgressError extends Error {
   code = 'matchInProgress';
@@ -96,6 +99,32 @@ export function registerCaptureIpc(): void {
     subscribers.add(event.sender);
     return state;
   });
+
+  // GEP plumbing status: whether the package loaded, whether the game was
+  // detected, whether elevation blocks us. No match data here either.
+  handle(IPC.capture.getGepStatus, () => getGepStatus());
+
+  // File metadata only — never contents. A dump holds the BattleTags of
+  // everyone in the match.
+  handle(IPC.capture.listDumps, () => {
+    const active = dumper.current;
+    const files = dumper.list().map((f) => ({
+      name: f.name,
+      bytes: active && active.name === f.name ? active.bytes : f.bytes,
+      lines: active && active.name === f.name ? active.lines : -1,
+      startedAt: f.startedAt,
+      active: Boolean(active && active.name === f.name),
+    }));
+    return files;
+  });
+
+  handle(IPC.capture.revealDumps, async () => {
+    await shell.openPath(dumper.directory);
+    return true;
+  });
+
+  // Status changes ride the same broadcast as the capture state.
+  onGepStatusChanged(() => broadcast());
 }
 
 /** Test seam: reset module state between cases. */

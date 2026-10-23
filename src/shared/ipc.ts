@@ -25,6 +25,11 @@ export const IPC = {
   capture: {
     getState: 'capture:getState',
     onStateChanged: 'capture:stateChanged',
+    // M0: the raw event dump. Returns file metadata only — never contents,
+    // which hold other players' BattleTags.
+    getGepStatus: 'capture:getGepStatus',
+    listDumps: 'capture:listDumps',
+    revealDumps: 'capture:revealDumps',
   },
 } as const;
 
@@ -49,6 +54,21 @@ export interface CaptureState {
   matchInProgress: boolean;
   /** Matches recorded this session. A count, not match data. */
   recordedThisSession: number;
+}
+
+export interface GepStatusView {
+  packageReady: boolean;
+  gameId: number | null;
+  elevationRequired: boolean;
+  lastError: string | null;
+}
+
+export interface DumpFileView {
+  name: string;
+  bytes: number;
+  lines: number;
+  startedAt: number;
+  active: boolean;
 }
 
 /** Shape of the error an IPC handler rejects with. */

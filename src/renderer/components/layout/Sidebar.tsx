@@ -24,6 +24,7 @@ const PATHS = {
   compare: 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
   about: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
   feedback: 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z',
+  capture: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
   collapse: 'M11 19l-7-7 7-7m8 14l-7-7 7-7',
   globe: 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9',
 };
@@ -130,6 +131,7 @@ export default function Sidebar() {
 
         {/* M1 lands here: recorded matches, scoreboards, session reports. */}
         <SectionLabel collapsed={collapsed}>{t('Matches')}</SectionLabel>
+        <NavItem to="/capture" icon={PATHS.capture} label={t('Event Capture')} collapsed={collapsed} />
         <div
           title={collapsed ? t('Match History') : undefined}
           className={`mx-2 flex h-9 cursor-default items-center gap-3 rounded-md text-[13px] text-ow-text-muted ${

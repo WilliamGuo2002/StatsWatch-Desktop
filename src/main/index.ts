@@ -4,6 +4,8 @@ import { IPC } from '../shared/ipc';
 import { overfast } from './overfast/client';
 import { handle } from './ipc/envelope';
 import { registerCaptureIpc } from './ipc/matchGate';
+import { initGameEvents } from './gep/gameEvents';
+import { dumper } from './gep/dumper';
 
 const isDev = !app.isPackaged;
 const DEV_URL = process.env.VITE_DEV_SERVER_URL ?? 'http://localhost:5173';
@@ -73,11 +75,20 @@ app.whenReady().then(() => {
 
   registerOverfastIpc();
   registerCaptureIpc();
+
+  // M0: subscribe to Overwatch game events and write the raw stream to
+  // disk. Uses only the `gep` package — no overlay, nothing injected.
+  initGameEvents();
+
   createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+app.on('before-quit', () => {
+  dumper.close();
 });
 
 app.on('window-all-closed', () => {

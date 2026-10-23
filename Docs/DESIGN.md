@@ -612,9 +612,25 @@ StatsWatch-Desktop/
 
 ## 10. 里程碑
 
-### M0 — 骨架（本周）
+### M0 — 骨架
 ow-electron 跑起来、GEP 连上 Overwatch（10844）、把**所有** feature 的原始事件 dump 成 JSONL。
 **产出：一份真实对局的事件流 fixture。** 后面所有算法都在它上面开发，不必反复开游戏。
+
+> **前置条件：Overwolf 开发者密钥。** 代码写完也跑不了，这不是可选项。
+>
+> 没有凭据时包管理器直接拒绝加载游戏包，控制台输出 `[owepm] package manager stopped by renderer - invalid verification`，**应用本身照常运行，只是没有采集**。
+>
+> 拿到 `OW_DEV_KEY` 的完整路径（[官方文档](https://dev.overwolf.com/ow-electron/guides/dev-tools/dev-mode/)）：
+>
+> 1. 在 dev.overwolf.com 注册
+> 2. **提交应用构想** —— DevRel **人工审核**
+> 3. 审核通过后 Developer status 从 Pending 变 Approved
+> 4. 在个人资料页 Developer Key 处点 Generate key
+> 5. 启动前设环境变量：`$env:OW_DEV_KEY = '<key>'`
+>
+> 第 2 步意味着 **Overwolf 会在我们能跑 GEP 之前先人工看一遍这个应用要做什么**。§11.1 里"动工前先问 Overwolf DevRel"那条因此不再是可选动作，而是必经流程——提交构想时就把问题一并问清楚。
+>
+> 再往后（M6 分发）还需要 App Signing，且要先通过 QA review 才会拿到 Developer Console 账号和 `OW_CLI_*` 凭据。
 
 ### M1 — 采集与记分板
 事件 → SQLite 落库；比赛历史列表；比赛记分板（含敌方英雄回填）；自动会话切分。
@@ -647,7 +663,7 @@ replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Elec
 
 | 项 | 状态 | 处理 |
 |---|---|---|
-| Overwolf 开发者账号 / app id | **待办** | 注册，确认 Overwatch GEP 在 PROD 可直接用 |
+| Overwolf 开发者密钥 | **M0 硬阻塞** | 代码已就绪但跑不了，需走完注册 → 提交构想 → DevRel 人工审核 → 生成 `OW_DEV_KEY`，见 M0 前置条件 |
 | 敌方 `hero_name` 是否真的缺 | **待运行时验证** | 文档 249.1.0 说只给本方，官方样例却给了。M0 dump 时验证；兜底方案已有（`kill_feed` 回填） |
 | 代码签名证书 | 待办 | 自行分发必需；OV 证书约 $100–300/年 |
 | GEP 随游戏更新中断 | 持续风险 | UI 显示事件状态；接 Overwolf 状态 API；算法对缺失字段容错 |
