@@ -630,6 +630,8 @@ ow-electron 跑起来、GEP 连上 Overwatch（10844）、把**所有** feature 
 >
 > 第 2 步意味着 **Overwolf 会在我们能跑 GEP 之前先人工看一遍这个应用要做什么**。§11.1 里"动工前先问 Overwolf DevRel"那条因此不再是可选动作，而是必经流程——提交构想时就把问题一并问清楚。
 >
+> ⚠️ **但审核附带的条件与本项目"全功能免费、自行分发"的前提冲突，见 §11.2。在决定走哪条路之前不要提交。**
+>
 > 再往后（M6 分发）还需要 App Signing，且要先通过 QA review 才会拿到 Developer Console 账号和 `OW_CLI_*` 凭据。
 
 ### M1 — 采集与记分板
@@ -683,7 +685,7 @@ replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Elec
 - 目前能找到的唯一官方 Overwatch 立场仍是 2018 年那次。**没有**找到更新的官方表态
 - 现状明显变化：Overwolf GEP 已把 Overwatch 列入 **Production** 环境，OverBuddy 正常运营并宣称使用"officially Blizzard-approved game integration"
 - **该"Blizzard-approved"说法无任何第三方证实**，仅为厂商自述
-- OverBuddy 确实要求绑定战网（上手流程第 2 步："connect your account with your Battle.net BattleTag"），但那是**身份验证，不是数据通道**，见 §11.2。注册 OAuth 客户端是自助的，**不能**为游戏集成那部分背书
+- OverBuddy 确实要求绑定战网（上手流程第 2 步："connect your account with your Battle.net BattleTag"），但那是**身份验证，不是数据通道**，见 §11.3。注册 OAuth 客户端是自助的，**不能**为游戏集成那部分背书
 - 2026 年 10 月有开发者在暴雪开发者论坛**申请**守望先锋对局数据 API 访问权限 —— 需要申请即说明至今没有，帖子无暴雪回复
 
 **我们的立场**
@@ -700,7 +702,40 @@ replay 缓冲 + 自动剪辑评分 + 剪辑库；全局热键手动存片（Elec
 
 README 和应用内首次启动页都要如实写明：这是非官方第三方软件，暴雪从未公开认可过任何此类工具，使用存在非零风险，由用户自行判断。不得引用 OverBuddy 那句未经证实的"经暴雪批准"为自己背书。
 
-### 11.2 战网 OAuth：能做什么、不能做什么
+### 11.2 Overwolf 的准入条件（与本项目前提冲突，待决）
+
+拿 `OW_DEV_KEY` 必须先通过 Phase 1 的 App proposal 审核，而审核附带的条件和本项目的立项前提直接冲突。**这是一个尚未解决的开放问题，不是已经接受的约束。**
+
+**条件（[Phase 1 文档](https://dev.overwolf.com/ow-electron/getting-started/project-roadmap/)原文）**
+
+| 条件 | 原文 | 与本项目的冲突 |
+|---|---|---|
+| 强制变现 | "All apps must integrate Overwolf ads, subscriptions powered by Tebex, or both. Overwolf won't approve apps that don't. Third-party monetization services aren't allowed." | 立项前提是**全功能免费**；iOS 版招牌是 100% Free, No Ads。且现有的 PayPal 打赏属于"第三方变现" |
+| 必须上架 | "Overwolf doesn't approve private apps. All apps must be listed and distributed through the Overwolf Appstore, and public distribution outside the Overwolf platform isn't permitted." | 与"自行分发"的假设冲突 |
+| 白名单 | "Using Overwolf APIs requires your app idea to be whitelisted... Unapproved apps won't have full access to the Overwolf Packages features." | 削弱 PolyForm Strict 的理由之一——第三方即使自行编译也拿不到 GEP |
+
+**文档自相矛盾，需要向 DevRel 问实**
+
+[ow-electron FAQ](https://dev.overwolf.com/ow-electron/getting-started/onboarding-resources/ow-electron-faq/) 的说法与上面第二条直接相反：
+
+> Q: Can I share/host my Electron version with anyone and on any site/server?
+> A: **Yes**, you are able to share your app with anyone you like as well as host the app in any location you prefer.
+
+可能 FAQ 讲技术能力、Phase 1 讲合同约束，也可能文档未同步。**提交构想时必须一并问清楚。**
+
+**可选路径（未定）**
+
+| 方案 | 代价 |
+|---|---|
+| A — 接受条件 | 接 Overwolf 广告（功能仍免费，但"无广告"的承诺没了）、上架商店、放弃自行分发 |
+| B — 先问清楚再定 | 提交时把分发与变现的问题挑明，拿到书面答复再决定。成本只是时间 |
+| C — 放弃 GEP | 只发 M2 生涯查询版，不依赖 Overwolf，完全自由。代价是 M0/M1/M3/M4 全部作废 |
+
+**M2 不受影响**：生涯查询这一半不碰 Overwolf 的任何东西，无论选哪条路都能照常发布。
+
+---
+
+### 11.3 战网 OAuth：能做什么、不能做什么
 
 OverBuddy 要求绑定战网账号，这容易让人以为对局数据来自暴雪官方接口。查证后**不是**。
 
@@ -753,6 +788,7 @@ OverBuddy 要求绑定战网账号，这容易让人以为对局数据来自暴�
 - [OverFast API](https://overfast-api.tekrop.fr)
 - [StatsWatch (iOS)](https://github.com/WilliamGuo2002/StatsWatch-Overwatch-tracker) ｜ [StatsWatch 网页版（TS + React，M2 的复用来源）](https://github.com/WilliamGuo2002/StatsWatch.app-Web-Version-Overwatch-Tracker)
 - [OverBuddy](https://overbuddy.com/) ｜ [FAQ](https://overbuddy.com/faq/) ｜ [Premium](https://overbuddy.com/premium/)
+- [Overwolf Phase 1 — App Idea to Submission（准入条件）](https://dev.overwolf.com/ow-electron/getting-started/project-roadmap/) ｜ [ow-electron FAQ（与之矛盾的分发说法）](https://dev.overwolf.com/ow-electron/getting-started/onboarding-resources/ow-electron-faq/)
 - [Battle.net OAuth 官方文档（scope 与端点）](https://community.developer.battle.net/documentation/guides/using-oauth)
 - [Cloudflare Workers 定价](https://developers.cloudflare.com/workers/platform/pricing/)
 - [2018 年暴雪针对 Visor / Pursuit 的警告（Engadget）](https://www.engadget.com/2018-09-20-overwatch-blizzard-visor-pursuit-ban.html) ｜ [Game Developer 报道](https://www.gamedeveloper.com/programming/blizzard-cracks-down-on-third-party-data-tracking-apps-in-i-overwatch-i-)
